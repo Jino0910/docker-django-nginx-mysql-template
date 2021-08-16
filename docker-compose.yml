@@ -1,0 +1,41 @@
+version: "3"
+
+services:
+
+  nginx:
+    container_name: nginx
+    build: ./nginx
+    restart: always
+    ports:
+      - "7003:80"
+    volumes:
+      - ./backend/config:/srv/code/config
+      - ./log:/var/log/nginx
+    depends_on:
+      - django
+      
+  db:
+    image: mysql
+    command: mysqld --character-set-server=utf8 --collation-server=utf8_general_ci --default-authentication-plugin=mysql_native_password
+    container_name: main.mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: "0000"
+      MYSQL_DATABASE: "chorok"
+      MYSQL_USER: "admin"
+      MYSQL_PASSWORD: "0000"
+    ports:
+        - "7001:3306"
+
+  django:
+    build: ./backend
+    container_name: main.django
+    #command: python manage.py runserver 0.0.0.0:8000
+    command: uwsgi uwsgi.ini
+    volumes:
+      - ./backend/config:/srv/code/config
+      - ./log:/var/log
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
